@@ -58,7 +58,6 @@ gulp.task('serve', ['style'], function() {
   gulp.watch([
     './*.html',
     './js/*.js',
-    './fonts/*.{woff,woff2,ttf,eot,svg}',
     './img/*.{jpg,jpeg,png,gif,svg}',
   ], ['watch:static']);
 

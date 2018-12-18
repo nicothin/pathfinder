@@ -1,5 +1,30 @@
 document.addEventListener('DOMContentLoaded', function(){
 
+  // Функции
+  // - сгенерировать позиции следов
+  // - сгенерировать игровое поле
+  // - очистить игровое поле
+
+  function Pathfinder(size = 16, traces = 3){
+    this.conf = {
+      status: 'pause',
+      fieldSize: size,
+      traces: traces,
+      message: {
+        default: 'Следы будут показаны на 3 секунды.',
+        start: 'Укажите где были следы.',
+        error: 'Ошибка, начните заново.',
+        done: 'Раунд завершён.',
+      },
+      class: {
+        //
+      }
+    };
+  }
+
+  const game = new Pathfinder(16, 3);
+  console.log(game);
+
   const pathfinderConfig = {
     gameStarted: false,
     tracks: [],
@@ -7,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function(){
       default: 'Следы будут показаны на 3 секунды.',
       gameStart: 'Укажите где были следы.',
       done: 'Раунд завершён.',
+      error: 'Ошибка, начните заново.',
     }
   };
 
