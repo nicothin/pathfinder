@@ -1,108 +1,133 @@
 document.addEventListener('DOMContentLoaded', function(){
 
-  // Функции
-  // - сгенерировать позиции следов
-  // - сгенерировать игровое поле
-  // - очистить игровое поле
-
-  function Pathfinder(size = 16, traces = 3){
-    this.conf = {
-      status: 'pause',
-      fieldSize: size,
-      traces: traces,
-      message: {
-        default: 'Следы будут показаны на 3 секунды.',
-        start: 'Укажите где были следы.',
-        error: 'Ошибка, начните заново.',
-        done: 'Раунд завершён.',
-      },
-      class: {
-        //
-      }
-    };
-  }
-
-  const game = new Pathfinder(16, 3);
-  console.log(game);
-
   const pathfinderConfig = {
     gameStarted: false,
+    fieldSize: 16,
+    traces: 3,
     tracks: [],
-    messages: {
+    message: {
       default: 'Следы будут показаны на 3 секунды.',
-      gameStart: 'Укажите где были следы.',
-      done: 'Раунд завершён.',
+      start: 'Укажите где были следы.',
       error: 'Ошибка, начните заново.',
-    }
+      done: 'Раунд завершён.',
+    },
+    selector: {
+      start: '.game__start',
+      message: '.game__message',
+      fields: '.game__field',
+      place: '.game__place',
+      fieldTrack: '.game__place--track',
+      fieldSuccess: '.game__place--success',
+      fieldError: '.game__place--error',
+    },
+    placeHTML: '<button class="game__place"></button>',
+    placeWidth: 46,
   };
 
-  const startButton = document.getElementById('start');
-  const field = document.getElementById('buttons');
-  const messagesArea = document.getElementById('message');
-  const fieldPlaces = document.querySelectorAll('#buttons button');
+  const fields = document.querySelector(pathfinderConfig.selector.fields);
+  const startButton = document.querySelector(pathfinderConfig.selector.start);
+  const messagesArea = document.querySelector(pathfinderConfig.selector.message);
 
-  messagesArea.innerHTML = pathfinderConfig.messages.default;
+  messagesArea.innerHTML = pathfinderConfig.message.default;
+  startButton.classList.remove('hidden');
 
-  startButton.onclick = gameStart;
+  drawField();
 
-  field.onclick = function(event) {
-    if(pathfinderConfig.gameStarted && pathfinderConfig.tracks.length) {
+  startButton.addEventListener('click', gameStart);
+
+  fields.addEventListener('click', function(event) {
+    if(pathfinderConfig.gameStarted) {
       const target = event.target;
       const index = [...target.parentNode.children].findIndex(n => n === target);
-      // console.log('click: '+index);
       const clicketButtonPos = pathfinderConfig.tracks.indexOf(index);
       if (clicketButtonPos > -1) {
-        target.classList.remove('btn-light');
-        target.classList.add('btn-success', 'game__field-btn--track');
+        // console.log('yes');
+        target.classList.add(pathfinderConfig.selector.fieldSuccess.slice(1));
         pathfinderConfig.tracks.splice(clicketButtonPos, 1);
-        // console.log(pathfinderConfig.tracks);
+        console.log(pathfinderConfig.tracks);
+        if(!pathfinderConfig.tracks.length) {
+          console.log(pathfinderConfig.message.done);
+          gameOver(pathfinderConfig.message.done);
+        }
       }
       else {
-        target.classList.remove('btn-light');
-        target.classList.add('btn-danger');
-        gameOver();
-      }
-      if(!pathfinderConfig.tracks.length) {
-        gameOver();
+        console.log(pathfinderConfig.message.error);
+        target.classList.add(pathfinderConfig.selector.fieldError.slice(1));
+        gameOver(pathfinderConfig.message.error);
       }
     }
-  };
-
-  function cleanTracks() {
-    for (var i = 0; i < fieldPlaces.length; ++i) {
-      fieldPlaces[i].classList.remove('game__field-btn--track', 'btn-success', 'btn-danger');
-      fieldPlaces[i].classList.add('btn-light');
-    }
-  }
+  });
 
   function gameStart() {
-    cleanTracks();
-    pathfinderConfig.tracks = getTracks(3, 16);
+    cleanField();
+    pathfinderConfig.tracks = getTracks(pathfinderConfig.traces, pathfinderConfig.fieldSize);
     // console.log(pathfinderConfig.tracks);
-    pathfinderConfig.tracks.forEach(function(item) {
-      fieldPlaces[item].classList.add('game__field-btn--track');
-    });
+    drawField();
+    showTracks();
     startButton.setAttribute('disabled', true);
     setTimeout(function() {
-      cleanTracks();
-      messagesArea.innerHTML = pathfinderConfig.messages.gameStart;
+      hideTracks();
+      messagesArea.innerHTML = pathfinderConfig.message.start;
       pathfinderConfig.gameStarted = true;
     }, 3000);
   }
 
-  function gameOver() {
-    pathfinderConfig.tracks.forEach(function(item) {
-      fieldPlaces[item].classList.add('game__field-btn--track');
-    });
+  function gameOver(message) {
     pathfinderConfig.gameStarted = false;
     pathfinderConfig.tracks = [];
     startButton.removeAttribute('disabled');
-    messagesArea.innerHTML = pathfinderConfig.messages.done;
+    messagesArea.innerHTML = message;
+    pathfinderConfig.tracks.forEach(function(item) {
+      fieldPlaces[item].classList.add(pathfinderConfig.selector.fieldTrack.slice(1));
+    });
     setTimeout(function() {
       cleanTracks();
-      messagesArea.innerHTML = pathfinderConfig.messages.default;
+      messagesArea.innerHTML = pathfinderConfig.message.default;
     }, 2000);
   }
+
+  function cleanField() {
+    fields.innerHTML = '';
+  }
+
+  function getFieldHTML(fieldSize, fieldHTML) {
+    let html = '';
+    for (let i = 0; i < fieldSize; i++) {
+      html += fieldHTML;
+    }
+    return html;
+  }
+
+  function drawField() {
+    fields.innerHTML = getFieldHTML(pathfinderConfig.fieldSize, pathfinderConfig.placeHTML);
+    fields.style.width = Math.sqrt(pathfinderConfig.fieldSize) * pathfinderConfig.placeWidth + 'px';
+  }
+
+  function showTracks() {
+    const places = document.querySelectorAll(pathfinderConfig.selector.place);
+    pathfinderConfig.tracks.forEach(function(item) {
+      places[item].classList.add(pathfinderConfig.selector.fieldTrack.slice(1));
+    });
+  }
+
+  function hideTracks() {
+    const places = Array.from(document.querySelectorAll(pathfinderConfig.selector.place));
+    places.forEach(function(item) {
+      item.classList.remove(pathfinderConfig.selector.fieldTrack.slice(1));
+    });
+  }
+
+  function cleanTracks() {
+    const places = Array.from(document.querySelectorAll(pathfinderConfig.selector.fieldTrack));
+    places.forEach(function(item) {
+      item.classList
+        .remove(pathfinderConfig.selector.fieldTrack.slice(1))
+        .remove(pathfinderConfig.selector.fieldSuccess.slice(1))
+        .remove(pathfinderConfig.selector.fieldError.slice(1));
+    });
+  }
+
+
 
   /**
    * Генератор случайных чисел
